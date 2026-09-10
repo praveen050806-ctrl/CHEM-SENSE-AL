@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEM-SENSE AI — Dynamic Freshness Intelligence</title>
+<meta name="description" content="CHEM-SENSE AI turns a passive food package into a condition-aware intelligent package using smart chemistry, smartphone imaging and AI.">
+<style>
+  :root{
+    --charcoal:#1B211F;
+    --charcoal-2:#232B29;
+    --charcoal-3:#2C3532;
+    --offwhite:#F4F7F6;
+    --panel:#FFFFFF;
+    --ink:#1E2624;
+    --muted-ink:#5B6663;
+    --cream:#EDEAE1;
+    --muted-cream:#AEB8B4;
+    --teal:#2E9C86;
+    --teal-deep:#1F6F60;
+    --teal-tint:#E4F3EF;
+    --copper:#B9773F;
+    --copper-tint:#F5E9DC;
+    --amber:#D9A441;
+    --reject:#C1453C;
+    --line:#DCE3E0;
+    --line-dark:#333D3A;
+    --serif: Georgia, "Iowan Old Style", "Cambria", "Times New Roman", serif;
+    --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --maxw: 1120px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--offwhite); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{display:block; max-width:100%;}
+  a{color:inherit;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
+
+  h1,h2,h3{font-family:var(--serif); font-weight:700; margin:0; letter-spacing:-0.01em;}
+  .eyebrow{
+    font-family:var(--sans); font-weight:700; font-size:12px;
+    color:var(--teal); letter-spacing:0.04em; margin:0 0 14px;
+  }
+  .eyebrow.on-dark{color:var(--muted-cream);}
+  .lede{color:var(--muted-ink); font-size:16.5px; max-width:640px; line-height:1.6;}
+
+  :focus-visible{outline:2px solid var(--teal); outline-offset:3px;}
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- NAV ---------- */
+  header.site-nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(244,247,246,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{display:flex; align-items:center; justify-content:space-between; height:64px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--serif); font-weight:700; font-size:18px;}
+  .brand .dots{display:flex; gap:4px;}
+  .brand .dots span{width:7px; height:7px; border-radius:50%; display:block;}
+  .brand .dots span:nth-child(1){background:var(--teal);}
+  .brand .dots span:nth-child(2){background:var(--amber);}
+  .brand .dots span:nth-child(3){background:var(--reject);}
+  nav.links{display:flex; gap:26px; font-size:14px; font-weight:600;}
+  nav.links a{text-decoration:none; color:var(--muted-ink);}
+  nav.links a:hover{color:var(--ink);}
+  @media (max-width:720px){ nav.links{display:none;} }
+
+  /* ---------- HERO ---------- */
+  .hero{background:var(--charcoal); color:var(--cream); padding:64px 0 76px; overflow:hidden;}
+  .hero-grid{display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center;}
+  @media (max-width:900px){ .hero-grid{grid-template-columns:1fr; gap:44px;} }
+  .hero h1{font-size:clamp(40px,5.4vw,60px); line-height:1.02; color:var(--cream);}
+  .hero .lede-dark{color:var(--muted-cream); font-size:17px; max-width:520px; margin-top:18px;}
+  .hero .rule{width:64px; height:2px; background:var(--teal); margin:26px 0 0;}
+  .hero-tagline{font-family:var(--serif); font-style:italic; color:var(--muted-cream); font-size:19px; margin-top:22px;}
+
+  /* ---------- DEMO PANEL ---------- */
+  .demo-card{
+    background:var(--charcoal-2); border:1px solid var(--line-dark);
+    border-radius:4px; padding:26px 26px 22px;
+  }
+  .demo-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px;}
+  .demo-head .label{font-size:11.5px; font-weight:700; letter-spacing:0.05em; color:var(--muted-cream);}
+  .demo-head .hint{font-size:11.5px; color:var(--muted-cream);}
+
+  .indicator{
+    position:relative; height:160px; border-radius:3px;
+    background:var(--charcoal-3);
+    display:flex; align-items:center; justify-content:center;
+    transition:background-color .5s ease;
+    overflow:hidden;
+  }
+  .indicator::before{
+    content:""; position:absolute; inset:0;
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 26px);
+  }
+  .indicator .swatch{
+    width:92px; height:92px; border-radius:50%;
+    background: var(--charcoal-3);
+    border:2px solid rgba(255,255,255,0.12);
+    transition: background-color .5s ease, border-color .5s ease, transform .4s ease;
+    position:relative; z-index:1;
+  }
+  .indicator.scanning .swatch{transform:scale(0.92);}
+  .indicator[data-state="fresh"] .swatch{background:var(--teal); border-color:var(--teal);}
+  .indicator[data-state="warning"] .swatch{background:var(--amber); border-color:var(--amber);}
+  .indicator[data-state="spoiled"] .swatch{background:var(--reject); border-color:var(--reject);}
+
+  .demo-readout{display:flex; align-items:flex-end; justify-content:space-between; margin-top:18px; padding-top:16px; border-top:1px solid var(--line-dark);}
+  .demo-readout .score{font-family:var(--serif); font-size:46px; font-weight:700; line-height:1; color:var(--teal); transition:color .4s ease;}
+  .demo-readout .score-label{font-size:11.5px; color:var(--muted-cream); margin-bottom:6px;}
+  .demo-readout .verdict{font-family:var(--serif); font-weight:700; font-size:16px; text-align:right;}
+
+  .demo-buttons{display:flex; gap:8px; margin-top:20px;}
+  .demo-buttons button{
+    flex:1; padding:10px 8px; border-radius:3px; border:1px solid var(--line-dark);
+    background:transparent; color:var(--muted-cream); font-family:var(--sans); font-weight:600; font-size:13px;
+    cursor:pointer; transition:background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .demo-buttons button:hover{border-color:var(--muted-cream); color:var(--cream);}
+  .demo-buttons button[data-active="true"][data-target="fresh"]{background:var(--teal); color:#0d1a17; border-color:var(--teal);}
+  .demo-buttons button[data-active="true"][data-target="warning"]{background:var(--amber); color:#241a04; border-color:var(--amber);}
+  .demo-buttons button[data-active="true"][data-target="spoiled"]{background:var(--reject); color:#2a0906; border-color:var(--reject);}
+
+  .pipeline-mini{display:flex; justify-content:space-between; margin-top:22px; gap:4px;}
+  .pipeline-mini .step{flex:1; text-align:center;}
+  .pipeline-mini .dot{
+    width:9px; height:9px; border-radius:50%; margin:0 auto 8px; background:var(--line-dark);
+    transition:background-color .35s ease, box-shadow .35s ease;
+  }
+  .pipeline-mini .step span{font-size:9.5px; color:var(--muted-cream); letter-spacing:0.02em;}
+  .pipeline-mini .dot.lit{background:var(--teal); box-shadow:0 0 0 4px rgba(46,156,134,0.18);}
+
+  /* ---------- SECTIONS ---------- */
+  section{padding:84px 0;}
+  section.on-dark{background:var(--charcoal); color:var(--cream);}
+  .section-head{max-width:680px; margin-bottom:44px;}
+  .section-head h2{font-size:clamp(26px,3.4vw,36px); line-height:1.12;}
+  .on-dark .section-head h2{color:var(--cream);}
+  .on-dark .lede{color:var(--muted-cream);}
+
+  /* problem */
+  .problem-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:40px; align-items:start;}
+  @media (max-width:900px){ .problem-grid{grid-template-columns:1fr;} }
+  .consequence-cards{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:28px;}
+  @media (max-width:520px){ .consequence-cards{grid-template-columns:1fr;} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:22px;}
+  .card .dot-lead{width:12px; height:12px; border-radius:50%; margin-bottom:14px;}
+  .card h3{font-size:16.5px; margin-bottom:8px;}
+  .card p{color:var(--muted-ink); font-size:13.8px; margin:0;}
+
+  .quote-panel{background:var(--charcoal); color:var(--cream); border-radius:4px; padding:28px;}
+  .quote-panel .qp-label{font-size:11px; font-weight:700; color:var(--muted-cream); letter-spacing:0.04em; margin-bottom:10px;}
+  .quote-panel .qp-old{font-family:var(--serif); font-style:italic; font-size:16px; color:var(--muted-cream);}
+  .quote-panel hr{border:none; border-top:1px solid var(--line-dark); margin:22px 0;}
+  .quote-panel .qp-new-label{font-size:11px; font-weight:700; color:var(--teal); letter-spacing:0.04em; margin-bottom:10px;}
+  .quote-panel .qp-new{font-family:var(--serif); font-weight:700; font-size:22px; line-height:1.25;}
+
+  /* pipeline / solution */
+  .layers{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-top:8px;}
+  @media (max-width:900px){ .layers{grid-template-columns:1fr 1fr;} }
+  @media (max-width:560px){ .layers{grid-template-columns:1fr;} }
+  .layer{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:22px 18px; text-align:left;}
+  .layer .num{
+    width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--serif); font-weight:700; color:#fff; margin-bottom:14px; font-size:15px;
+  }
+  .layer h3{font-size:15px; margin-bottom:8px;}
+  .layer p{font-size:12.8px; color:var(--muted-ink); margin:0;}
+  .flow-caption{margin-top:22px; font-family:var(--serif); font-style:italic; color:var(--teal-deep); font-size:14px;}
+
+  /* applications */
+  .app-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+  @media (max-width:900px){ .app-grid{grid-template-columns:repeat(2,1fr);} }
+  .app-tile{background:var(--charcoal-2); border-radius:4px; padding:20px 16px; color:var(--cream);}
+  .app-tile h3{font-size:14.5px; margin-bottom:8px;}
+  .app-tile p{font-size:11.8px; color:var(--muted-cream); margin:0;}
+
+  /* feasibility */
+  .feas-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:8px;}
+  @media (max-width:760px){ .feas-grid{grid-template-columns:1fr;} }
+  .feas-card h3{color:var(--teal-deep); font-size:15px; margin-bottom:8px;}
+  .feas-card p{font-size:13.5px; color:var(--muted-ink); margin:0;}
+
+  /* judge Q&A */
+  .qa-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px;}
+  @media (max-width:760px){ .qa-grid{grid-template-columns:1fr;} }
+  .qa-card{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:22px;}
+  .qa-card .q-mark{color:var(--teal); font-family:var(--serif); font-weight:700; font-size:14px; margin-bottom:6px;}
+  .qa-card h3{font-size:15.5px; margin-bottom:8px;}
+  .qa-card p{font-size:13.3px; color:var(--muted-ink); margin:0;}
+
+  /* integrity + future */
+  .integ-grid{display:grid; grid-template-columns:1fr 1fr; gap:32px;}
+  @media (max-width:860px){ .integ-grid{grid-template-columns:1fr;} }
+  .integ-note{background:var(--charcoal-2); border-radius:4px; padding:26px;}
+  .integ-note .lab{font-size:11px; font-weight:700; color:var(--amber); letter-spacing:0.04em; margin-bottom:12px;}
+  .integ-note p{color:var(--cream); font-size:14.5px; line-height:1.55;}
+  .integ-note ul{margin:14px 0 0; padding-left:18px; color:var(--muted-cream); font-size:13.3px; line-height:2;}
+  .future-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .future-list .lab{grid-column:1/-1; font-size:11px; font-weight:700; color:var(--copper); letter-spacing:0.04em; margin-bottom:4px;}
+  .future-item{background:var(--offwhite); border:1px solid var(--line); border-radius:4px; padding:14px 16px; font-size:13.3px;}
+
+  /* closing */
+  .closing{padding:96px 0 80px;}
+  .closing blockquote{
+    font-family:var(--serif); font-style:italic; font-weight:700;
+    font-size:clamp(22px,3vw,28px); line-height:1.3; margin:18px 0 0; color:var(--cream);
+    max-width:760px;
+  }
+  .closing .rule{width:64px; height:2px; background:var(--teal); margin:32px 0;}
+  .closing .line1{color:var(--muted-cream); font-size:17px;}
+  .closing .line2{font-family:var(--serif); font-weight:700; font-size:26px; color:var(--teal); margin-top:6px;}
+  .closing .signoff{margin-top:44px; font-size:12.5px; color:var(--muted-cream);}
+
+  footer{background:var(--charcoal); border-top:1px solid var(--line-dark); padding:26px 0; color:var(--muted-cream); font-size:12.5px;}
+  footer .foot-row{display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;}
+
+  .integrity-flag{
+    display:inline-block; margin-top:14px; font-size:12px; color:var(--muted-ink);
+    border:1px solid var(--line); border-radius:4px; padding:8px 12px; background:var(--panel);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-nav">
+  <div class="wrap nav-row">
+    <div class="brand"><span class="dots"><span></span><span></span><span></span></span>CHEM-SENSE&nbsp;AI</div>
+    <nav class="links">
+      <a href="#problem">Problem</a>
+      <a href="#solution">Solution</a>
+      <a href="#demo">Demo</a>
+      <a href="#applications">Applications</a>
+      <a href="#faq">Judge Q&amp;A</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="demo">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow on-dark">DYNAMIC FRESHNESS INTELLIGENCE</p>
+      <h1>Packaging that senses its own condition.</h1>
+      <p class="lede-dark">CHEM-SENSE AI replaces a fixed expiry guess with a live reading: a chemically responsive indicator, a smartphone camera, and an AI decision layer working together on every pack.</p>
+      <div class="rule"></div>
+      <p class="hero-tagline">"We are making the package itself aware of its condition."</p>
+    </div>
+
+    <div class="demo-card">
+      <div class="demo-head">
+        <span class="label">LIVE INDICATOR DEMO</span>
+        <span class="hint">tap a state to scan</span>
+      </div>
+      <div class="indicator" id="indicator" data-state="fresh">
+        <div class="swatch" id="swatch"></div>
+      </div>
+      <div class="pipeline-mini" id="pipelineMini">
+        <div class="step"><span class="dot" data-step="1"></span><span>Chemistry</span></div>
+        <div class="step"><span class="dot" data-step="2"></span><span>Camera</span></div>
+        <div class="step"><span class="dot" data-step="3"></span><span>Vision</span></div>
+        <div class="step"><span class="dot" data-step="4"></span><span>Decision</span></div>
+        <div class="step"><span class="dot" data-step="5"></span><span>Result</span></div>
+      </div>
+      <div class="demo-readout">
+        <div>
+          <div class="score-label">Freshness score</div>
+          <div class="score" id="score">91%</div>
+        </div>
+        <div class="verdict" id="verdict">SAFE&nbsp;/&nbsp;FRESH</div>
+      </div>
+      <div class="demo-buttons">
+        <button type="button" data-target="fresh" data-active="true">Fresh</button>
+        <button type="button" data-target="warning">Warning</button>
+        <button type="button" data-target="spoiled">Spoiled</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="wrap problem-grid">
+    <div>
+      <p class="eyebrow">THE PROBLEM</p>
+      <h2>A printed date is a guess, not a measurement.</h2>
+      <p class="lede" style="margin-top:16px;">Expiry dates assume ideal handling. In reality, temperature abuse, refrigeration failure and delivery delays change a product's actual condition well before — or sometimes well after — the date on the label.</p>
+
+      <div class="consequence-cards">
+        <div class="card">
+          <span class="dot-lead" style="background:var(--reject);"></span>
+          <h3>Spoils early</h3>
+          <p>A cold-chain break can spoil a product days before its printed date, with no visible warning to the consumer.</p>
+        </div>
+        <div class="card">
+          <span class="dot-lead" style="background:var(--amber);"></span>
+          <h3>Discarded early</h3>
+          <p>Retailers and shoppers throw out food that's still perfectly good, simply because the fixed date has passed.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-panel">
+      <div class="qp-label">THE QUESTION WE ASK TODAY</div>
+      <div class="qp-old">"Has the printed date passed?"</div>
+      <hr>
+      <div class="qp-new-label">THE QUESTION CHEM-SENSE AI ASKS</div>
+      <div class="qp-new">"What is the actual condition of this product, right now?"</div>
+    </div>
+  </div>
+</section>
+
+<section id="solution">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">THE SOLUTION</p>
+      <h2>Five layers turn a chemical reaction into a decision.</h2>
+    </div>
+    <div class="layers">
+      <div class="layer"><div class="num" style="background:var(--teal);">1</div><h3>Smart chemistry</h3><p>A calibrated indicator generates a measurable visual response as the product changes.</p></div>
+      <div class="layer"><div class="num" style="background:var(--copper);">2</div><h3>Smartphone camera</h3><p>Existing consumer hardware captures the indicator — no dedicated device needed.</p></div>
+      <div class="layer"><div class="num" style="background:var(--teal);">3</div><h3>Computer vision</h3><p>The AI layer extracts colour and feature data from the captured image.</p></div>
+      <div class="layer"><div class="num" style="background:var(--copper);">4</div><h3>Decision engine</h3><p>The extracted signal becomes a dynamic freshness score and a clear verdict.</p></div>
+      <div class="layer"><div class="num" style="background:var(--teal);">5</div><h3>User interface</h3><p>SAFE, WARNING or REJECT is shown as one simple, actionable result.</p></div>
+    </div>
+    <p class="flow-caption">Smart Chemical Indicator → Camera → Image Processing → AI Model → Freshness Score → Action</p>
+  </div>
+</section>
+
+<section class="on-dark" id="applications">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow on-dark" style="color:var(--copper);">APPLICATIONS</p>
+      <h2 style="color:var(--cream);">Wherever cold-chain condition is guesswork today.</h2>
+    </div>
+    <div class="app-grid">
+      <div class="app-tile"><h3>Dairy</h3><p>Milk &amp; refrigerated products</p></div>
+      <div class="app-tile"><h3>Seafood / Meat</h3><p>Cold-chain condition screening</p></div>
+      <div class="app-tile"><h3>Produce</h3><p>Freshness indication</p></div>
+      <div class="app-tile"><h3>Logistics</h3><p>Cold-chain exception detection</p></div>
+      <div class="app-tile"><h3>Retail</h3><p>Faster stock-quality triage</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">REAL-WORLD FEASIBILITY</p>
+      <h2>Built around hardware you already carry.</h2>
+    </div>
+    <div class="feas-grid">
+      <div class="feas-card"><h3>Minimal hardware</h3><p>The smartphone supplies the camera, so dedicated electronics can be minimised.</p></div>
+      <div class="feas-card"><h3>Printable indicator</h3><p>The chemical layer can be designed as a printed or integrated packaging element.</p></div>
+      <div class="feas-card"><h3>Clear validation path</h3><p>Select food-specific chemistry, build a dataset, and calibrate against spoilage markers.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">ANTICIPATED QUESTIONS</p>
+      <h2>What judges are likely to ask.</h2>
+    </div>
+    <div class="qa-grid">
+      <div class="qa-card"><div class="q-mark">Q</div><h3>Is this just a colour sensor?</h3><p>No — it combines chemical sensing, smartphone computer vision and AI decision logic, with storage/QR links planned for the full system.</p></div>
+      <div class="qa-card"><div class="q-mark">Q</div><h3>Can it be low cost?</h3><p>The indicator integrates into packaging while the consumer's existing smartphone provides the optical hardware, avoiding per-pack electronics.</p></div>
+      <div class="qa-card"><div class="q-mark">Q</div><h3>Does it certify food safety?</h3><p>No. The prototype demonstrates the software/decision layer only — production use needs food-safety validation and certification.</p></div>
+      <div class="qa-card"><div class="q-mark">Q</div><h3>What is the innovation?</h3><p>Turning packaging from a passive fixed-date label into a condition-aware interface with a dynamic freshness score.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap integ-grid">
+    <div class="integ-note">
+      <div class="lab">SCIENTIFIC INTEGRITY NOTE</div>
+      <p>This prototype demonstrates the software and decision layer only. It must not be presented as laboratory validation, or as proof that a colour guarantees food safety.</p>
+      <ul>
+        <li>Indicator chemistry</li>
+        <li>Food-specific thresholds</li>
+        <li>Environmental effects</li>
+        <li>Model accuracy</li>
+        <li>Regulatory requirements</li>
+      </ul>
+    </div>
+    <div class="future-list">
+      <div class="lab">FUTURE SCOPE</div>
+      <div class="future-item">Food-specific AI models</div>
+      <div class="future-item">QR-linked batch records</div>
+      <div class="future-item">Cold-chain temperature logging</div>
+      <div class="future-item">Retailer dashboards</div>
+      <div class="future-item">On-device / offline inference</div>
+      <div class="future-item">Multilingual alerts</div>
+    </div>
+  </div>
+</section>
+
+<section class="on-dark closing">
+  <div class="wrap">
+    <p class="eyebrow on-dark">THE 60-SECOND PITCH</p>
+    <blockquote>"Our vision is to turn every passive package into an intelligent package — without an expensive electronic sensor in every pack."</blockquote>
+    <div class="rule"></div>
+    <p class="line1">We are not trying to make the expiry date smarter.</p>
+    <p class="line2">We are making the package itself aware of its condition.</p>
+    <p class="signoff">CHEM-SENSE AI — Smart Chemistry · Computer Vision · Decision Engine</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <span>CHEM-SENSE AI — Competition Project Summary</span>
+    <span>Concept demonstration only — not a certified food-safety measurement</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var states = {
+    fresh:   { score: 91, verdict: "SAFE / FRESH",       color: "var(--teal)"  },
+    warning: { score: 57, verdict: "WARNING",             color: "var(--amber)" },
+    spoiled: { score: 18, verdict: "DO NOT CONSUME",       color: "var(--reject)" }
+  };
+
+  var indicator = document.getElementById("indicator");
+  var scoreEl = document.getElementById("score");
+  var verdictEl = document.getElementById("verdict");
+  var buttons = Array.prototype.slice.call(document.querySelectorAll(".demo-buttons button"));
+  var dots = Array.prototype.slice.call(document.querySelectorAll("#pipelineMini .dot"));
+  var scanTimer = null;
+  var litTimers = [];
+
+  function clearLit(){
+    litTimers.forEach(function(t){ clearTimeout(t); });
+    litTimers = [];
+    dots.forEach(function(d){ d.classList.remove("lit"); });
+  }
+
+  function runPipeline(){
+    clearLit();
+    dots.forEach(function(dot, i){
+      var t = setTimeout(function(){ dot.classList.add("lit"); }, 140 * (i + 1));
+      litTimers.push(t);
+    });
+  }
+
+  function setState(name){
+    var st = states[name];
+    if(!st) return;
+
+    buttons.forEach(function(b){
+      b.setAttribute("data-active", b.getAttribute("data-target") === name ? "true" : "false");
+    });
+
+    indicator.classList.add("scanning");
+    clearTimeout(scanTimer);
+    scanTimer = setTimeout(function(){
+      indicator.setAttribute("data-state", name);
+      indicator.classList.remove("scanning");
+      scoreEl.textContent = st.score + "%";
+      scoreEl.style.color = st.color;
+      verdictEl.textContent = st.verdict;
+      runPipeline();
+    }, 260);
+  }
+
+  buttons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      setState(btn.getAttribute("data-target"));
+    });
+  });
+
+  // initial state on load
+  runPipeline();
+})();
+</script>
+
+</body>
+</html>
